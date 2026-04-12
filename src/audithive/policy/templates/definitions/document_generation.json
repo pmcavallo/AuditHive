@@ -1,0 +1,111 @@
+{
+  "id": "document_generation",
+  "name": "Internal document generation",
+  "description": "Governance template for internal tools that generate reports, memos, proposals, or summaries for employees. Lower regulatory exposure (no consumer interaction) but high data leakage risk: employees paste confidential data into prompts without thinking.",
+  "use_case": "document_generation",
+  "version": 1,
+  "risk_level": "medium",
+  "regulatory_grounding": [
+    "CCPA/GDPR data protection (PII in prompts sent to external LLMs)",
+    "NIST AI 600-1 data privacy controls",
+    "ISO 42001 data governance requirements",
+    "SR 11-7 documentation and audit trail requirements"
+  ],
+  "config": {
+    "pre_call": {
+      "pii_detection": {
+        "enabled": true,
+        "types": {
+          "ssn": {"enabled": true, "action": "block"},
+          "credit_card": {"enabled": true, "action": "block"},
+          "email": {"enabled": true, "action": "flag"},
+          "phone": {"enabled": true, "action": "flag"}
+        },
+        "custom_patterns": []
+      },
+      "confidential_data_detection": {
+        "enabled": true,
+        "action": "block",
+        "keywords": [],
+        "patterns": [],
+        "_note": "Customer adds their confidential data markers: project codenames, internal account numbers, classification labels (CONFIDENTIAL, INTERNAL ONLY, etc.)"
+      },
+      "injection_detection": {
+        "enabled": true,
+        "action": "flag",
+        "sensitivity": "medium"
+      },
+      "scope_enforcement": {
+        "enabled": false,
+        "action": "flag",
+        "allowed_topics": [],
+        "scope_description": "",
+        "_note": "Off by default: internal doc gen is inherently broad. Customer enables if needed."
+      },
+      "content_filter": {
+        "enabled": false,
+        "action": "flag",
+        "prohibited_topics": [],
+        "_note": "Off by default: internal use has fewer content restrictions. Customer enables if needed."
+      },
+      "ai_disclosure": {
+        "enabled": false,
+        "_note": "Internal tool: AI disclosure not required by regulation for employee-facing use."
+      }
+    },
+    "post_call": {
+      "pii_leakage": {
+        "enabled": true,
+        "action": "flag",
+        "types": ["ssn", "credit_card", "email", "phone"]
+      },
+      "harmful_content": {
+        "enabled": false,
+        "_note": "Internal document generation: lower risk of harmful content. Customer enables if needed."
+      },
+      "hallucination_detection": {
+        "enabled": true,
+        "action": "flag",
+        "method": "keyword_grounding",
+        "threshold": 0.6,
+        "_note": "Lower threshold than chatbot: internal docs are more tolerant of creative generation"
+      },
+      "brand_tone": {
+        "enabled": false,
+        "action": "flag",
+        "guidelines": "",
+        "_note": "Off by default: internal docs don't always need brand enforcement"
+      },
+      "source_attribution": {
+        "enabled": true,
+        "action": "flag",
+        "require_sources": false,
+        "_note": "Flags when the LLM generates claims without sourcing. Important for internal reports shared upward."
+      },
+      "approved_answers": {
+        "enabled": false,
+        "answers": {},
+        "_note": "Phase 3+: grounded response enforcement"
+      }
+    },
+    "logging": {
+      "full_interaction": true,
+      "include_request": true,
+      "include_response": true,
+      "include_policy_results": true,
+      "include_evaluation_scores": true
+    },
+    "alerting": {
+      "enabled": true,
+      "on_block": true,
+      "on_flag": false,
+      "channels": [],
+      "_note": "Phase 6: email, Slack, webhook alerting"
+    },
+    "retention": {
+      "days": 60,
+      "min_days": 30,
+      "max_days": 1095
+    }
+  }
+}

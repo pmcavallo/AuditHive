@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AuditHive Governance Report</title>
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 40px; font-size: 12px; line-height: 1.5; }
+  h1, h2, h3 { color: #112752; margin-top: 24px; }
+  h1 { font-size: 24px; border-bottom: 2px solid #112752; padding-bottom: 8px; }
+  h2 { font-size: 18px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  h3 { font-size: 14px; }
+  .cover { text-align: center; padding: 80px 0; page-break-after: always; }
+  .cover h1 { border: none; font-size: 32px; }
+  .cover .subtitle { font-size: 16px; color: #666; margin-top: 8px; }
+  .maturity { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 13px; }
+  .maturity.mature { background: #d1fae5; color: #065f46; }
+  .maturity.developing { background: #fef3c7; color: #92400e; }
+  .maturity.immature { background: #fed7aa; color: #9a3412; }
+  .maturity.ungoverned { background: #fecaca; color: #991b1b; }
+  .score-big { font-size: 48px; font-weight: 700; }
+  .score-big.green { color: #059669; }
+  .score-big.yellow { color: #d97706; }
+  .score-big.red { color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #f3f4f6; text-align: left; padding: 8px; font-size: 11px; text-transform: uppercase; color: #6b7280; }
+  td { padding: 8px; border-bottom: 1px solid #e5e7eb; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .severity { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .severity.critical { background: #fecaca; color: #991b1b; }
+  .severity.high { background: #fed7aa; color: #9a3412; }
+  .severity.medium { background: #fef3c7; color: #92400e; }
+  .severity.low { background: #d1fae5; color: #065f46; }
+  .status-covered { color: #059669; font-weight: 600; }
+  .status-missing { color: #dc2626; font-weight: 600; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #9ca3af; text-align: center; }
+  .section { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- 1. Cover -->
+<div class="cover">
+  <h1>AuditHive Governance Report</h1>
+  <p class="subtitle">{{ customer_name }}</p>
+  <p style="color:#888; margin-top:16px;">{{ period_start }} &mdash; {{ period_end }}</p>
+  <p style="margin-top:24px;"><span class="maturity {{ maturity_level }}">{{ maturity_level | upper }}</span></p>
+  <p style="color:#888; margin-top:8px;">Generated {{ generated_at }}</p>
+</div>
+
+<!-- 2. Executive Summary -->
+{% if examiner %}
+<div class="section">
+  <h1>Executive Summary</h1>
+  <p>{{ examiner.executive_summary }}</p>
+  <p><strong>Risk Rating:</strong> {{ examiner.risk_rating | upper }}</p>
+</div>
+{% endif %}
+
+<!-- 3. Governance Overview -->
+<div class="section">
+  <h1>Governance Overview</h1>
+  <table>
+    <tr>
+      <td style="text-align:center; width:25%;">
+        <div class="score-big {{ 'green' if coverage_score >= 80 else 'yellow' if coverage_score >= 50 else 'red' }}">{{ coverage_score }}%</div>
+        <div style="color:#6b7280;">Coverage Score</div>
+      </td>
+      <td style="text-align:center; width:25%;"><span class="maturity {{ maturity_level }}">{{ maturity_level | upper }}</span><br><span style="color:#6b7280;">Maturity</span></td>
+      <td style="text-align:center; width:25%;"><div style="font-size:24px; font-weight:700;">{{ regulations_count }}</div><div style="color:#6b7280;">Regulations</div></td>
+      <td style="text-align:center; width:25%;"><div style="font-size:24px; font-weight:700;">{{ policies_count }}</div><div style="color:#6b7280;">Active Policies</div></td>
+    </tr>
+  </table>
+</div>
+
+<!-- 4. Applicable Regulations -->
+{% if applicable_regulations %}
+<div class="section">
+  <h1>Applicable Regulations</h1>
+  <table>
+    <thead><tr><th>Regulation</th><th>Jurisdiction</th><th>Why It Applies</th></tr></thead>
+    <tbody>
+    {% for r in applicable_regulations %}
+      <tr><td>{{ r.regulation }}</td><td>{{ r.jurisdiction }}</td><td>{{ r.why }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- 5. Controls Assessment -->
+{% if required_controls %}
+<div class="section">
+  <h1>Controls Assessment</h1>
+  <table>
+    <thead><tr><th>Control</th><th>Required By</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for c in required_controls %}
+      <tr>
+        <td>{{ c.control }}</td>
+        <td>{{ c.required_by | join(', ') }}</td>
+        <td class="status-{{ c.status }}">{{ c.status | upper }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- 6. Examiner Findings -->
+{% if examiner and examiner.findings %}
+<div class="section">
+  <h1>Examiner Findings</h1>
+  {% for f in examiner.findings %}
+  <div style="margin-bottom:16px; padding:12px; border:1px solid #e5e7eb; border-radius:8px;">
+    <h3 style="margin-top:0;"><span class="severity {{ f.severity }}">{{ f.severity | upper }}</span> {{ f.title }}</h3>
+    <p>{{ f.description }}</p>
+    <p><strong>Evidence:</strong> {{ f.evidence }}</p>
+    <p><strong>Regulation:</strong> {{ f.regulation }}</p>
+    <p><strong>Remediation:</strong> {{ f.remediation }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- 7. Gaps -->
+{% if gaps %}
+<div class="section">
+  <h1>Described vs. Established Gaps</h1>
+  {% for g in gaps %}
+  <div style="margin-bottom:8px; padding:8px; border-left:3px solid {{ '#dc2626' if g.risk == 'high' else '#d97706' }};">
+    <strong>{{ g.gap_type }}</strong> ({{ g.risk }}): {{ g.description }}<br>
+    <em>Fix: {{ g.fix }}</em>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- 8. Four Questions -->
+{% if four_questions %}
+<div class="section">
+  <h1>Four Questions Framework</h1>
+  <table>
+    <thead><tr><th>Question</th><th>Status</th><th>Recommendation</th></tr></thead>
+    <tbody>
+    {% for key, q in four_questions.items() %}
+      <tr>
+        <td>{{ key | capitalize }}</td>
+        <td>{{ 'Answered' if q.answered else 'Not answered' }}</td>
+        <td>{{ q.recommendation or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- 9. Audit Trail Summary -->
+<div class="section">
+  <h1>Audit Trail Summary</h1>
+  <table>
+    <tr><td><strong>Total Calls</strong></td><td>{{ stats.total }}</td></tr>
+    <tr><td><strong>Blocked</strong></td><td>{{ stats.blocked }}</td></tr>
+    <tr><td><strong>Flagged</strong></td><td>{{ stats.flagged }}</td></tr>
+  </table>
+</div>
+
+<!-- 10. Recommendations -->
+{% if examiner and examiner.recommendations %}
+<div class="section">
+  <h1>Recommendations</h1>
+  <ol>
+  {% for r in examiner.recommendations %}
+    <li>{{ r }}</li>
+  {% endfor %}
+  </ol>
+</div>
+{% endif %}
+
+<!-- 11. Footer -->
+<div class="footer">
+  Generated by AuditHive | audithive.io
+</div>
+
+</body>
+</html>

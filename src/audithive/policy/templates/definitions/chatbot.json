@@ -1,0 +1,109 @@
+{
+  "id": "customer_chatbot",
+  "name": "Customer-facing chatbot",
+  "description": "Governance template for external chatbots that interact with customers on websites, apps, or messaging platforms. Highest regulatory exposure: FTC treats outputs as company representations, 6+ US states require AI disclosure, California and New York have minor-specific rules.",
+  "use_case": "chatbot",
+  "version": 1,
+  "risk_level": "high",
+  "regulatory_grounding": [
+    "FTC chatbot guidance (outputs as company representations)",
+    "Colorado AI Act (AI disclosure required regardless of risk level)",
+    "California SB 243 (minor protections, crisis referral protocols)",
+    "Utah AI Policy Act (disclosure on consumer request)",
+    "EU AI Act Article 52 (transparency for AI-human interaction)",
+    "NIST AI RMF GOVERN 1.1-1.4 (risk management documentation)"
+  ],
+  "config": {
+    "pre_call": {
+      "pii_detection": {
+        "enabled": true,
+        "types": {
+          "ssn": {"enabled": true, "action": "block"},
+          "credit_card": {"enabled": true, "action": "block"},
+          "email": {"enabled": true, "action": "flag"},
+          "phone": {"enabled": true, "action": "flag"}
+        },
+        "custom_patterns": []
+      },
+      "injection_detection": {
+        "enabled": true,
+        "action": "block",
+        "sensitivity": "high"
+      },
+      "scope_enforcement": {
+        "enabled": true,
+        "action": "flag",
+        "allowed_topics": [],
+        "scope_description": "",
+        "out_of_scope_message": "I can only help with questions related to our products and services."
+      },
+      "content_filter": {
+        "enabled": true,
+        "action": "block",
+        "prohibited_topics": [],
+        "prohibited_keywords": []
+      },
+      "ai_disclosure": {
+        "enabled": true,
+        "disclosure_text": "You are interacting with an AI assistant.",
+        "frequency": "session_start",
+        "inject_in_system_prompt": true
+      }
+    },
+    "post_call": {
+      "pii_leakage": {
+        "enabled": true,
+        "action": "block",
+        "types": ["ssn", "credit_card", "email", "phone"]
+      },
+      "harmful_content": {
+        "enabled": true,
+        "action": "block",
+        "categories": ["self_harm", "violence", "illegal_activity", "medical_advice", "legal_advice"]
+      },
+      "hallucination_detection": {
+        "enabled": true,
+        "action": "flag",
+        "method": "keyword_grounding",
+        "threshold": 0.7,
+        "_note": "Phase 3+: upgrade to semantic grounding with BERTScore"
+      },
+      "brand_tone": {
+        "enabled": true,
+        "action": "flag",
+        "guidelines": "",
+        "prohibited_phrases": []
+      },
+      "disclaimer_injection": {
+        "enabled": true,
+        "disclaimer_text": "",
+        "position": "append",
+        "_note": "Customer configures their required disclaimer text"
+      },
+      "approved_answers": {
+        "enabled": false,
+        "answers": {},
+        "_note": "Phase 3+: when customer asks about a topic with an approved answer, response must match approved text"
+      }
+    },
+    "logging": {
+      "full_interaction": true,
+      "include_request": true,
+      "include_response": true,
+      "include_policy_results": true,
+      "include_evaluation_scores": true
+    },
+    "alerting": {
+      "enabled": true,
+      "on_block": true,
+      "on_flag": false,
+      "channels": [],
+      "_note": "Phase 6: email, Slack, webhook alerting"
+    },
+    "retention": {
+      "days": 90,
+      "min_days": 30,
+      "max_days": 1095
+    }
+  }
+}
