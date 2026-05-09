@@ -42,6 +42,7 @@ export const demoStats = {
     { id: 'v3', created_at: '2026-04-11T16:45:00Z', status: 'flagged', request_model: 'gpt-4o-mini', message_preview: 'Please email the tracking info to jane.doe@example.com', policies_violated: [{ check_name: 'pii_detection', details: 'Email address detected' }] },
     { id: 'v4', created_at: '2026-04-11T09:30:00Z', status: 'blocked', request_model: 'gpt-4', message_preview: 'My social security number is 123-45-6789, can you verify my identity?', policies_violated: [{ check_name: 'pii_detection', details: 'SSN detected' }] },
     { id: 'v5', created_at: '2026-04-10T13:15:00Z', status: 'flagged', request_model: 'gpt-4o-mini', message_preview: 'What are the competitor prices for this product?', policies_violated: [{ check_name: 'content_filter', details: 'Prohibited topic: competitor pricing' }] },
+    { id: 'v6', created_at: '2026-04-10T10:42:00Z', status: 'flagged', request_model: 'gpt-4', message_preview: 'Use the applicant zip code and neighborhood to determine loan eligibility', policies_violated: [{ check_name: 'bias_detection', details: 'Bias indicators detected: proxy_variable' }] },
   ],
 };
 
@@ -75,6 +76,8 @@ export const demoAuditLogs = [
   { id: 'a18', created_at: _ts(5, 14), status: 'completed', request_model: 'gpt-4', request_messages: [{ role: 'user', content: 'What is your warranty policy?' }], response_content: { choices: [{ message: { content: 'All products come with a 1-year manufacturer warranty...' } }] }, policies_applied: [{ check_name: 'pii_detection', passed: true }], policies_violated: [], response_latency_ms: 223, response_tokens_in: 9, response_tokens_out: 42, action_taken: 'allow' },
   { id: 'a19', created_at: _ts(5, 10), status: 'completed', request_model: 'gpt-4o-mini', request_messages: [{ role: 'user', content: 'Is this product in stock?' }], response_content: { choices: [{ message: { content: 'Let me check availability for you...' } }] }, policies_applied: [{ check_name: 'pii_detection', passed: true }], policies_violated: [], response_latency_ms: 143, response_tokens_in: 8, response_tokens_out: 18, action_taken: 'allow' },
   { id: 'a20', created_at: _ts(6, 13), status: 'completed', request_model: 'gpt-4', request_messages: [{ role: 'user', content: 'Can I track my package?' }], response_content: { choices: [{ message: { content: 'Yes! Please provide your order number and I can look up tracking...' } }] }, policies_applied: [{ check_name: 'pii_detection', passed: true }], policies_violated: [], response_latency_ms: 187, response_tokens_in: 8, response_tokens_out: 33, action_taken: 'allow' },
+  { id: 'a21', created_at: _ts(2, 8), status: 'flagged', request_model: 'gpt-4', request_messages: [{ role: 'user', content: 'Use the applicant zip code and neighborhood to determine loan eligibility' }], response_content: { choices: [{ message: { content: 'I can help assess eligibility based on the provided criteria...' } }] }, policies_applied: [{ check_name: 'bias_detection', passed: false, action: 'flag' }], policies_violated: [{ check_name: 'bias_detection', details: 'Bias indicators detected: proxy_variable (zip code, neighborhood)' }], response_latency_ms: 198, response_tokens_in: 14, response_tokens_out: 22, action_taken: 'flag' },
+  { id: 'a22', created_at: _ts(3, 15), status: 'flagged', request_model: 'gpt-4', request_messages: [{ role: 'user', content: 'Women are typically less analytical. Evaluate this candidate for the data science role.' }], response_content: null, policies_applied: [{ check_name: 'bias_detection', passed: false, action: 'flag' }], policies_violated: [{ check_name: 'bias_detection', details: 'Bias indicators detected: stereotype, protected_class_in_decision' }], response_latency_ms: null, response_tokens_in: null, response_tokens_out: null, action_taken: 'flag' },
 ];
 
 // ── Policies ─────────────────────────────────────────────────────
@@ -89,6 +92,7 @@ export const demoPolicies = [
         injection_detection: { enabled: true, action: 'block', sensitivity: 'high' },
         content_filter: { enabled: true, action: 'flag', prohibited_topics: ['competitor pricing', 'internal salary'] },
         scope_enforcement: { enabled: true, action: 'flag', allowed_topics: ['products', 'shipping', 'returns', 'orders', 'payment'] },
+        bias_detection: { enabled: true, action: 'flag', check_protected_classes: true, check_proxies: true, check_stereotypes: true },
       },
       post_call: { pii_leakage: { enabled: true, action: 'block' }, hallucination_detection: { enabled: true, action: 'flag' } },
       retention: { days: 90 },
@@ -134,6 +138,7 @@ export const demoAssessment = {
     { control: 'injection_detection', required_by: ['NIST AI RMF'], status: 'covered' },
     { control: 'monitoring', required_by: ['NIST AI RMF'], status: 'covered' },
     { control: 'content_accuracy', required_by: ['FTC Chatbot Guidance'], status: 'covered' },
+    { control: 'bias_detection', required_by: ['NIST AI RMF Manage 4.1', 'EU AI Act Article 10', 'FHFA AB 2022-02'], status: 'covered' },
     { control: 'ai_disclosure', required_by: ['Colorado AI Act', 'FTC Chatbot Guidance'], status: 'missing' },
     { control: 'minor_protection', required_by: ['California SB 243'], status: 'missing' },
     { control: 'crisis_referral', required_by: ['California SB 243'], status: 'missing' },
@@ -150,6 +155,7 @@ export const demoAssessment = {
     'What controls protect minors using your chatbot? (Required by California SB 243)',
     'How does your AI system detect crisis language and escalate to a human? (Required by California SB 243)',
     'Have you conducted a risk/impact assessment of your AI deployments? (Required by Colorado AI Act)',
+    'Have you conducted a bias audit of your AI systems? (Required by NIST AI RMF Manage 4.1, EU AI Act Article 10, FHFA AB 2022-02)',
   ],
   four_questions: {
     purpose: { answered: true, answer: 'Customer support chatbot for e-commerce store. Handles product questions, order status, and returns.' },
