@@ -19,6 +19,7 @@ DETECTABLE_CONTROLS = {
     "content_filter",
     "scope_enforcement",
     "ai_disclosure",
+    "bias_detection",      # NIST AI RMF Manage 4.1, EU AI Act Art 10, FHFA AB 2022-02
     "audit_logging",       # always on — we ARE the audit log
     "monitoring",          # having AuditHive = monitoring
 }
@@ -68,6 +69,8 @@ FIX_SUGGESTIONS: dict[str, tuple[str, str]] = {
     "validation": ("Schedule independent validation of your AI outputs", "documentation"),
     "governance_documentation": ("Document governance processes using the Four Questions framework", "documentation"),
     "risk_assessment": ("Complete the AuditHive onboarding profile to map risks", "one_click"),
+    "bias_detection": ("Enable bias detection in your policy to flag protected class, proxy variable, and stereotype indicators", "one_click"),
+    "bias_audit": ("Conduct a bias audit using AuditHive's bias detection logs and demographic analysis", "documentation"),
 }
 
 
@@ -80,7 +83,7 @@ def _extract_controls_from_policy(config: dict) -> set[str]:
 
     pre_call = config.get("pre_call", config)  # template or flat
 
-    for check_name in ("pii_detection", "injection_detection", "content_filter", "scope_enforcement"):
+    for check_name in ("pii_detection", "injection_detection", "content_filter", "scope_enforcement", "bias_detection"):
         cfg = pre_call.get(check_name, {})
         if isinstance(cfg, dict) and cfg.get("enabled"):
             controls.add(check_name)

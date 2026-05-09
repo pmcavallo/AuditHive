@@ -8,6 +8,7 @@ from audithive.policy.checks.content import check_content
 from audithive.policy.checks.injection import check_injection
 from audithive.policy.checks.pii import check_pii
 from audithive.policy.checks.scope import check_scope
+from audithive.policy.checks.bias import check_bias
 
 DEFAULT_POLICY_CONFIG: dict = {
     "pii_detection": {
@@ -23,6 +24,9 @@ DEFAULT_POLICY_CONFIG: dict = {
         "action": "flag",
     },
     "scope_enforcement": {
+        "enabled": False,
+    },
+    "bias_detection": {
         "enabled": False,
     },
 }
@@ -51,6 +55,7 @@ CHECK_REGISTRY: dict[str, callable] = {
     "content_filter": check_content,
     "injection_detection": check_injection,
     "scope_enforcement": check_scope,
+    "bias_detection": check_bias,
 }
 
 
@@ -131,6 +136,12 @@ def _normalize_template_config(config: dict) -> dict:
         flat["scope_enforcement"] = pre_call["scope_enforcement"]
     else:
         flat["scope_enforcement"] = {"enabled": False}
+
+    # Bias detection — already compatible
+    if "bias_detection" in pre_call:
+        flat["bias_detection"] = pre_call["bias_detection"]
+    else:
+        flat["bias_detection"] = {"enabled": False}
 
     return flat
 
